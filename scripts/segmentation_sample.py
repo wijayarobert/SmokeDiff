@@ -1,5 +1,3 @@
-
-
 import argparse
 import os
 from ssl import OP_NO_TLSv1
@@ -15,8 +13,6 @@ import torch as th
 from PIL import Image
 import torch.distributed as dist
 from guided_diffusion import dist_util, logger
-from guided_diffusion.bratsloader import BRATSDataset, BRATSDataset3D
-from guided_diffusion.isicloader import ISICDataset
 from guided_diffusion.custom_dataset_loader import CustomDataset
 import torchvision.utils as vutils
 from guided_diffusion.utils import staple
@@ -53,12 +49,6 @@ def main():
 
         ds = CustomDataset(args, args.data_dir, transform_test, mode = 'Test')
         args.in_ch = 4
-    elif args.data_name == 'BRATS':
-        tran_list = [transforms.Resize((args.image_size,args.image_size)),]
-        transform_test = transforms.Compose(tran_list)
-
-        ds = BRATSDataset3D(args.data_dir,transform_test)
-        args.in_ch = 5
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
@@ -96,9 +86,7 @@ def main():
         img = th.cat((b, c), dim=1)     #add a noise channel$
         if args.data_name == 'SMOKE5K':
             slice_ID=path[0].split("_")[-1].split('.')[0]
-        elif args.data_name == 'BRATS':
-            # slice_ID=path[0].split("_")[2] + "_" + path[0].split("_")[4]
-            slice_ID=path[0].split("_")[-3] + "_" + path[0].split("slice")[-1].split('.nii')[0]
+       
 
         logger.log("sampling...")
 
@@ -131,36 +119,7 @@ def main():
                 enslist.append(co)
 
             if args.debug:
-                # print('sample size is',sample.size())
-                # print('org size is',org.size())
-                # print('cal size is',cal.size())
-                if args.data_name == 'ISIC':
-                    # s = th.tensor(sample)[:,-1,:,:].unsqueeze(1).repeat(1, 3, 1, 1)
-                    o = th.tensor(org)[:,:-1,:,:]
-                    c = th.tensor(cal).repeat(1, 3, 1, 1)
-                    # co = co.repeat(1, 3, 1, 1)
-
-                    s = sample[:,-1,:,:]
-                    b,h,w = s.size()
-                    ss = s.clone()
-                    ss = ss.view(s.size(0), -1)
-                    ss -= ss.min(1, keepdim=True)[0]
-                    ss /= ss.max(1, keepdim=True)[0]
-                    ss = ss.view(b, h, w)
-                    ss = ss.unsqueeze(1).repeat(1, 3, 1, 1)
-
-                    tup = (ss,o,c)
-                elif args.data_name == 'BRATS':
-                    s = th.tensor(sample)[:,-1,:,:].unsqueeze(1)
-                    m = th.tensor(m.to(device = 'cuda:0'))[:,0,:,:].unsqueeze(1)
-                    o1 = th.tensor(org)[:,0,:,:].unsqueeze(1)
-                    o2 = th.tensor(org)[:,1,:,:].unsqueeze(1)
-                    o3 = th.tensor(org)[:,2,:,:].unsqueeze(1)
-                    o4 = th.tensor(org)[:,3,:,:].unsqueeze(1)
-                    c = th.tensor(cal)
-
-                    tup = (o1/o1.max(),o2/o2.max(),o3/o3.max(),o4/o4.max(),m,s,c,co)
-
+                
                 compose = th.cat(tup,0)
                 vutils.save_image(compose, fp = os.path.join(args.out_dir, str(slice_ID)+'_output'+str(i)+".jpg"), nrow = 1, padding = 10)
         ensres = staple(th.stack(enslist,dim=0)).squeeze(0)
@@ -174,7 +133,7 @@ def main():
 def create_argparser():
     defaults = dict(
         data_name = 'SMOKE5K',
-        data_dir="../dataset/brats2020/testing",
+        data_dir="../dataset/smoke5k/test",
         clip_denoised=True,
         num_samples=1,
         batch_size=1,

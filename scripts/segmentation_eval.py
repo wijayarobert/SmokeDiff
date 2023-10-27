@@ -148,7 +148,7 @@ def main():
                 num += 1
                 ind = name.split('_')[0]
                 pred = Image.open(os.path.join(root, name)).convert('L')
-                gt_name = "ISIC_" + ind + "_Segmentation.png"
+                gt_name = "SMOKE5K_" + ind + "_Segmentation.png"
                 gt = Image.open(os.path.join(gt_path, gt_name)).convert('L')
                 pred = torchvision.transforms.PILToTensor()(pred)
                 pred = torch.unsqueeze(pred,0).float() 
