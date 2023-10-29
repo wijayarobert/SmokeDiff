@@ -20,7 +20,7 @@ python scripts/segmentation_eval.py --inp_pth *folder you save prediction images
 
 ## Model Checkpoint
 The checkpoint of the model use in this work can be downloaded here:
-Google drive (To be updated)
+[Google drive](https://drive.google.com/file/d/19WialpMTnu7qNNQ16rdwh5bam6_-i674/view?usp=sharing)
 
 ## Visualization
 ![enter image description here](https://i.ibb.co/ctVhrxL/Screenshot-2023-10-23-154357.png%22%20alt=%22Screenshot-2023-10-23-154357%22%20border=%220%22)
